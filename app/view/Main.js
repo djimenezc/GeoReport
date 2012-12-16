@@ -1,63 +1,64 @@
 Ext.define('GeoReport.view.Main', {
-    extend : 'Ext.tab.Panel',
-    xtype : 'main',
-    requires : ['Ext.TitleBar'],
-    config : {
-        tabBarPosition : 'bottom',
+	extend : 'Ext.tab.Panel',
+	xtype : 'main',
+	requires : [ 'Ext.TitleBar', 'GeoReport.view.MapView' ],
+	config : {
+		tabBarPosition : 'bottom',
+		fullscreen : false,
+		layout: 'card',
+		items : [ {
+			title : 'Welcome',
+			iconCls : 'home',
 
-        
-        items : [{
-            title : 'Welcome',
-            iconCls : 'home',
+			styleHtmlContent : true,
+			scrollable : true,
 
-            styleHtmlContent : true,
-            scrollable : true,
+			items : {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'GeoReport'
+			}
 
-            items : {
-                docked : 'top',
-                xtype : 'titlebar',
-                title : 'GeoReport'
-            }
+		}, {
+			title : 'Reports',
+			iconCls : 'action',
 
-        }, {
-            title : 'Reports',
-            iconCls : 'action',
+			styleHtmlContent : true,
+			scrollable : true,
 
-            styleHtmlContent : true,
-            scrollable : true,
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Reports'
+			} ]
 
-            items : [{
-                docked : 'top',
-                xtype : 'titlebar',
-                title : 'Reports'
-            }]
+		}, {
+			title : 'Map',
+			iconCls : 'maps',
+			
+			styleHtmlContent : true,
+			scrollable : true,
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Map'
+			},{
+				xtype : 'mapview'
+			} ]
 
-        }, {
-            title : 'Map',
-            iconCls : 'maps',
+		}, {
+			title : 'Logout',
+			iconCls : 'disclosure',
 
-            styleHtmlContent : true,
-            scrollable : true,
+			styleHtmlContent : true,
+			scrollable : true,
 
-            items : [{
-                docked : 'top',
-                xtype : 'titlebar',
-                title : 'Map'
-            }]
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Logout'
+			} ]
 
-        }, {
-            title : 'Logout',
-            iconCls : 'disclosure',
-
-            styleHtmlContent : true,
-            scrollable : true,
-
-            items : [{
-                docked : 'top',
-                xtype : 'titlebar',
-                title : 'Logout'
-            }]
-
-        }]
-    }
+		} ]
+	}
 });

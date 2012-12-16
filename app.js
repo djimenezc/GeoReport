@@ -7,14 +7,14 @@ Ext.Loader.setPath({
 
 Ext.application({
     name: 'GeoReport',
-
+    fullscreen : true,
     requires: [
         'Ext.MessageBox'
     ],
 
     views: ['Main','LoginForm'],
     
-    controllers : ['ReportController','SessionsController'],
+    controllers : ['ReportController','SessionsController','MapController'],
 
     icon: {
         '57': 'resources/icons/Icon.png',
@@ -39,7 +39,7 @@ Ext.application({
         Ext.fly('appLoadingIndicator').destroy();
 
         // Initialize the main view
-        Ext.Viewport.add(Ext.create('GeoReport.view.LoginForm'));
+        Ext.Viewport.add(Ext.create('GeoReport.view.Main'));
     },
 
     onUpdated: function() {
