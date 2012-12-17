@@ -1,20 +1,17 @@
 Ext.define('GeoReport.view.Main', {
 	extend : 'Ext.tab.Panel',
 	xtype : 'main',
-//	fullscreen : true,
-//	layout: 'fit',
 	requires : [ 'Ext.TitleBar', 'GeoReport.view.MapView' ],
 	config : {
 		tabBarPosition : 'bottom',
-//		fullscreen : false,
-//		layout: 'card',
+		
 		items : [ {
 			title : 'Welcome',
 			iconCls : 'home',
 
 			styleHtmlContent : true,
 			scrollable : true,
-
+            html : '<welcome>',
 			items : {
 				docked : 'top',
 				xtype : 'titlebar',
@@ -24,10 +21,10 @@ Ext.define('GeoReport.view.Main', {
 		}, {
 			title : 'Reports',
 			iconCls : 'action',
-
 			styleHtmlContent : true,
 			scrollable : true,
 
+            html : '<Reports>',
 			items : [ {
 				docked : 'top',
 				xtype : 'titlebar',
@@ -41,6 +38,9 @@ Ext.define('GeoReport.view.Main', {
             layout: 'auto',
 			styleHtmlContent : true,
 			scrollable : true,
+			 layout : {
+                type : 'card'
+            },
 			items : [ {
 				docked : 'top',
 				xtype : 'titlebar',

@@ -12,7 +12,7 @@ Ext.application({
         'Ext.MessageBox'
     ],
 
-    views: ['Main','LoginForm'],
+    views: ['Main','LoginForm','MapView'],
     
     controllers : ['ReportController','SessionsController','MapController'],
 
