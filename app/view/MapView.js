@@ -1,6 +1,8 @@
 Ext.define('GeoReport.view.MapView', {
 	extend : 'Ext.Panel',
 	xtype : 'mapview',
+//	fullscreen : false,
+//	layout: 'card',
 	config : {
 
 		fullscreen : false,
@@ -17,7 +19,6 @@ Ext.define('GeoReport.view.MapView', {
 			xtype : 'map',
 			id: 'myMap',
 			useCurrentLocation : true,
-			layout: 'fit',
 			mapOptions: {
                 zoom: 12,
                 navigationControl: true,
