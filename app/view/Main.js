@@ -1,67 +1,73 @@
 Ext.define('GeoReport.view.Main', {
-	extend : 'Ext.tab.Panel',
-	xtype : 'main',
-	requires : [ 'Ext.TitleBar', 'GeoReport.view.MapView' ],
-	config : {
-		tabBarPosition : 'bottom',
-		
-		items : [ {
-			title : 'Welcome',
-			iconCls : 'home',
+    extend : 'Ext.tab.Panel',
+    xtype : 'main',
+    requires : ['Ext.TitleBar', 'GeoReport.view.MapView'],
+    config : {
+        tabBarPosition : 'bottom',
 
-			styleHtmlContent : true,
-			scrollable : true,
-            html : '<welcome>',
-			items : {
-				docked : 'top',
-				xtype : 'titlebar',
-				title : 'GeoReport'
-			}
+        items : [{
+            title : 'Welcome',
+            iconCls : 'home',
 
-		}, {
-			title : 'Reports',
-			iconCls : 'action',
-			styleHtmlContent : true,
-			scrollable : true,
+            styleHtmlContent : true,
+            scrollable : true,
+            html : '<h1>welcome</h1>',
+            items : {
+                docked : 'top',
+                xtype : 'titlebar',
+                title : 'GeoReport'
+            }
 
-            html : '<Reports>',
-			items : [ {
-				docked : 'top',
-				xtype : 'titlebar',
-				title : 'Reports'
-			} ]
+        }, {
+            title : 'Reports',
+            iconCls : 'action',
+            styleHtmlContent : true,
+            scrollable : true,
 
-		}, {
-			title : 'Map',
-			iconCls : 'maps',
-			fullscreen: false,
-            layout: 'auto',
-			styleHtmlContent : true,
-			scrollable : true,
-			 layout : {
+            html : '<h1>Reports</h1>',
+            items : [{
+                docked : 'top',
+                xtype : 'titlebar',
+                title : 'Reports'
+            }]
+
+        }, {
+            title : 'Map',
+            iconCls : 'maps',
+            fullscreen : false,
+            layout : 'auto',
+            styleHtmlContent : true,
+            scrollable : true,
+            layout : {
                 type : 'card'
             },
-			items : [ {
-				docked : 'top',
-				xtype : 'titlebar',
-				title : 'Map'
-			},{
-				xtype : 'mapview'
-			} ]
+            items : [{
+                docked : 'top',
+                xtype : 'titlebar',
+                title : 'Map'
+            }, {
+                xtype : 'mapview'
+            }]
 
-		}, {
-			title : 'Logout',
-			iconCls : 'disclosure',
+        }, {
+            title : 'Logout',
+            iconCls : 'disclosure',
 
-			styleHtmlContent : true,
-			scrollable : true,
+            styleHtmlContent : true,
+            scrollable : true,
+            id : 'logout',
+            listeners : {
+                activate : function() {
+                    console.log('Logout tab active');
+                    GeoReport.app.fireEvent('logout');
+                }
+            },
+            items : [{
+                docked : 'top',
+                xtype : 'titlebar',
+                title : 'Logout'
+            }]
 
-			items : [ {
-				docked : 'top',
-				xtype : 'titlebar',
-				title : 'Logout'
-			} ]
-
-		} ]
-	}
+        }]
+    }
 });

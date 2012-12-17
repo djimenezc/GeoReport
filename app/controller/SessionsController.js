@@ -5,13 +5,21 @@ Ext.define('GeoReport.controller.SessionsController', {
         refs: {
             loginButton: 'button[action=login]',
             loginForm: 'loginform',
-            mainView : 'main'
+            mainView : 'main',
+            main : 'main'
         },
         control: {
            loginButton: {
                 tap: 'doLogin'
-            }
+            },
         }
+    },
+    
+    init : function() {
+       console.log('SessionsController');
+       GeoReport.app.on({
+            logout : this.doLogout 
+       });
     },
 
     doLogin: function() {
@@ -29,6 +37,8 @@ Ext.define('GeoReport.controller.SessionsController', {
     },
     
     doLogout: function() {
-        // called whenever any Button with action=logout is tapped
+        console.log('doLogout');
+         var mainView = Ext.create('GeoReport.view.LoginForm');
+        Ext.Viewport.setActiveItem(mainView);
     }
 });
