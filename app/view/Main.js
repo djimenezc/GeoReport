@@ -55,7 +55,6 @@ Ext.define('GeoReport.view.Main', {
 
             styleHtmlContent : true,
             scrollable : true,
-            id : 'logout',
             listeners : {
                 activate : function() {
                     console.log('Logout tab active');

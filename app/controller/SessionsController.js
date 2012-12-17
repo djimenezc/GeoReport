@@ -1,7 +1,7 @@
 Ext.define('GeoReport.controller.SessionsController', {
     extend: 'Ext.app.Controller',
-    views: ['GeoReport.view.Main'],
     config: {
+        views: ['GeoReport.view.Main'],
         refs: {
             loginButton: 'button[action=login]',
             loginForm: 'loginform',

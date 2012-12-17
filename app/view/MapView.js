@@ -19,7 +19,6 @@ Ext.define('GeoReport.view.MapView', {
             }]
         }, {
             xtype : 'map',
-            id : 'myMap',
             useCurrentLocation : true,
             mapOptions : {
                 zoom : 12,
@@ -29,5 +28,10 @@ Ext.define('GeoReport.view.MapView', {
                 }
             }
         }]
+    },
+    
+    initialize : function(){
+        console.log('init mapview');
+        
     }
 });

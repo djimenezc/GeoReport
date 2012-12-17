@@ -1,6 +1,7 @@
 Ext.define('GeoReport.controller.MapController', {
     extend: 'Ext.app.Controller',
     xtype : 'mapcontroller',
+    requires : ['Ext.Map'],
     config: {
         refs: {
             myMap: 'myMap'
