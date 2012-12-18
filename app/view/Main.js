@@ -1,3 +1,8 @@
+Ext.Loader.setConfig({
+	enabled : true,
+	disableCaching : false
+});
+
 Ext.define('GeoReport.view.Main', {
 	extend : 'Ext.tab.Panel',
 	xtype : 'main',
@@ -34,9 +39,9 @@ Ext.define('GeoReport.view.Main', {
 				width : '100%',
 				height : '100%',
 				listeners : {
-					tap: function() {
+					tap: function(cmp) {
 						console.log('login image tap');
-						if(this.searchPos == 0) {
+						if(!this.searchPos || this.searchPos == 0) {
 							this.setSrc('resources/images/Screen-2.png');
 							this.searchPos = 1;
 						} else {
