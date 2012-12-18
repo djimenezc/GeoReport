@@ -12,9 +12,9 @@ Ext.application({
         'Ext.MessageBox'
     ],
 
-    views: ['Main','LoginForm','MapView'],
+    views: ['Main','LoginForm'],
     
-    controllers : ['ReportController','SessionsController','MapController'],
+    controllers : ['ReportController','SessionsController'],
 
     icon: {
         '57': 'resources/icons/Icon.png',
