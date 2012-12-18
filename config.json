@@ -1,0 +1,18 @@
+{
+    "applicationName": "mii",
+    "applicationId": "com.mapflow.mobile",
+    "outputPath":"~/Desktop/STBuild-Android",
+    "webAppPath":"/var/www/",
+    "iconName": "resources/icons/icon.png",
+    "versionString": "1.0",
+    "inputPath": "/home/MAPFLOW/djimenez/projects/sources/mapflow/mobile/GeoReport",
+    "configuration": "Debug",
+    "platform": "Android",
+    "certificatePath": "~/Desktop/debug.keystore",
+    "certificateAlias": "androiddebugkey",
+    "sdkPath": "~/android-sdk-mac_86",
+    "orientations": [
+        "portrait"
+    ],
+    "deviceType": "Universal"
+}

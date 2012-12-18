@@ -6,7 +6,7 @@ Ext.define('GeoReport.view.LoginForm', {
 
         fullscreen : true,
         items : [{
-            title : 'GeoReport',
+            title : 'mii',
             iconCls : 'home',
             xtype : 'titlebar',
             styleHtmlContent : true,
