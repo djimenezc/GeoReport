@@ -61227,7 +61227,7 @@ Ext.define('GeoReport.view.Main', {
 			items : [ {
 				xtype : 'image',
 				mode : 'image',
-				src : 'resources/images/loginv3.png',
+				src : 'resources/images/Screen-1.png',
 				width : '100%',
 				height : '100%'
 					
