@@ -6,90 +6,74 @@ Ext.Loader.setConfig({
 Ext.define('GeoReport.view.Main', {
 	extend : 'Ext.tab.Panel',
 	xtype : 'main',
-	requires : [ 'Ext.TitleBar', 'Ext.Img' ],
-	searchPos : 0,
+	requires : [ 'Ext.TitleBar', 'GeoReport.view.MapView', 'Ext.Img' ],
 	config : {
 		tabBarPosition : 'bottom',
 
-		items : [ 
-//		          {
-//			title : 'Welcome',
-//			iconCls : 'home',
-//			layout : 'fit',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			items : [ {
-//				xtype : 'image',
-//				mode : 'image',
-//				src : 'resources/images/loginv1.jpg',
-//				width : '100%',
-//				height : '100%'
-//			} ]
-//		}, 
-		{
-			title : 'mii',
-			iconCls : 'action',
-			styleHtmlContent : true,
+		items : [ {
+			title : 'Welcome',
+			iconCls : 'home',
 			layout : 'fit',
+			styleHtmlContent : true,
 			scrollable : true,
 			items : [ {
 				xtype : 'image',
 				mode : 'image',
-				src : 'resources/images/Screen-1.png',
+				src : 'resources/images/loginv3.png',
 				width : '100%',
-				height : '100%',
-				listeners : {
-					tap: function(cmp) {
-						console.log('login image tap');
-						if(!this.searchPos || this.searchPos == 0) {
-							this.setSrc('resources/images/Screen-2.png');
-							this.searchPos = 1;
-						} else {
-							this.setSrc('resources/images/Screen-1.png');
-							this.searchPos = 0;
-						}
-					}
-				},
+				height : '100%'
+					
 			} ]
 
-		}
-//		, {
-//			title : 'Map',
-//			iconCls : 'maps',
-//			fullscreen : false,
-//			layout : 'auto',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			html : '<h1>Map</h1>'
-//		}, {
-//			title : 'Notifications',
-//			iconCls: 'organize',
-//			fullscreen : false,
-//			layout : 'auto',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			html : '<h1>Notifications</h1>',
-//		}
-//		, {
-//			title : 'Logout',
-//			iconCls : 'disclosure',
-//
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			listeners : {
-//				activate : function() {
-//					console.log('Logout tab active');
-//					GeoReport.app.fireEvent('logout');
-//				}
-//			},
-//			items : [ {
-//				docked : 'top',
-//				xtype : 'titlebar',
-//				title : 'Logout'
-//			}
-//			]
-//
-//		} 
-		]
+		}, {
+			title : 'Reports',
+			iconCls : 'action',
+			styleHtmlContent : true,
+			scrollable : true,
+
+			html : '<h1>Reports</h1>',
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Reports'
+			} ]
+
+		}, {
+			title : 'Map',
+			iconCls : 'maps',
+			fullscreen : false,
+			layout : 'auto',
+			styleHtmlContent : true,
+			scrollable : true,
+			layout : {
+				type : 'card'
+			},
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Map'
+			}, {
+				xtype : 'mapview'
+			} ]
+
+		}, {
+			title : 'Logout',
+			iconCls : 'disclosure',
+
+			styleHtmlContent : true,
+			scrollable : true,
+			listeners : {
+				activate : function() {
+					console.log('Logout tab active');
+					GeoReport.app.fireEvent('logout');
+				}
+			},
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Logout'
+			} ]
+
+		} ]
 	}
 });

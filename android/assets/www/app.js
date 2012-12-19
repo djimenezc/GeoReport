@@ -34932,6 +34932,773 @@ Ext.define('Ext.LoadMask', {
 });
 
 /**
+ * Provides a cross browser class for retrieving location information.
+ *
+ * Based on the [Geolocation API Specification](http://dev.w3.org/geo/api/spec-source.html)
+ *
+ * When instantiated, by default this class immediately begins tracking location information,
+ * firing a {@link #locationupdate} event when new location information is available.  To disable this
+ * location tracking (which may be battery intensive on mobile devices), set {@link #autoUpdate} to `false`.
+ *
+ * When this is done, only calls to {@link #updateLocation} will trigger a location retrieval.
+ *
+ * A {@link #locationerror} event is raised when an error occurs retrieving the location, either due to a user
+ * denying the application access to it, or the browser not supporting it.
+ *
+ * The below code shows a GeoLocation making a single retrieval of location information.
+ *
+ *     var geo = Ext.create('Ext.util.Geolocation', {
+ *         autoUpdate: false,
+ *         listeners: {
+ *             locationupdate: function(geo) {
+ *                 alert('New latitude: ' + geo.getLatitude());
+ *             },
+ *             locationerror: function(geo, bTimeout, bPermissionDenied, bLocationUnavailable, message) {
+ *                 if(bTimeout){
+ *                     alert('Timeout occurred.');
+ *                 } else {
+ *                     alert('Error occurred.');
+ *                 }
+ *             }
+ *         }
+ *     });
+ *     geo.updateLocation();
+ */
+Ext.define('Ext.util.Geolocation', {
+    extend: 'Ext.Evented',
+    alternateClassName: ['Ext.util.GeoLocation'],
+
+    config: {
+        /**
+         * @event locationerror
+         * Raised when a location retrieval operation failed.
+         *
+         * In the case of calling updateLocation, this event will be raised only once.
+         *
+         * If {@link #autoUpdate} is set to `true`, this event could be raised repeatedly.
+         * The first error is relative to the moment {@link #autoUpdate} was set to `true`
+         * (or this {@link Ext.util.Geolocation} was initialized with the {@link #autoUpdate} config option set to `true`).
+         * Subsequent errors are relative to the moment when the device determines that it's position has changed.
+         * @param {Ext.util.Geolocation} this
+         * @param {Boolean} timeout
+         * Boolean indicating a timeout occurred
+         * @param {Boolean} permissionDenied
+         * Boolean indicating the user denied the location request
+         * @param {Boolean} locationUnavailable
+         * Boolean indicating that the location of the device could not be determined.
+         * For instance, one or more of the location providers used in the location acquisition
+         * process reported an internal error that caused the process to fail entirely.
+         * @param {String} message An error message describing the details of the error encountered.
+         *
+         * This attribute is primarily intended for debugging and should not be used
+         * directly in an application user interface.
+         */
+
+        /**
+         * @event locationupdate
+         * Raised when a location retrieval operation has been completed successfully.
+         * @param {Ext.util.Geolocation} this
+         * Retrieve the current location information from the GeoLocation object by using the read-only
+         * properties: {@link #latitude}, {@link #longitude}, {@link #accuracy}, {@link #altitude}, {@link #altitudeAccuracy}, {@link #heading}, and {@link #speed}.
+         */
+
+        /**
+         * @cfg {Boolean} autoUpdate
+         * When set to `true`, continually monitor the location of the device (beginning immediately)
+         * and fire {@link #locationupdate} and {@link #locationerror} events.
+         */
+        autoUpdate: true,
+
+        /**
+         * @cfg {Number} frequency
+         * The frequency of each update if {@link #autoUpdate} is set to `true`.
+         */
+        frequency: 10000,
+
+        /**
+         * Read-only property representing the last retrieved
+         * geographical coordinate specified in degrees.
+         * @type Number
+         * @readonly
+         */
+        latitude: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * geographical coordinate specified in degrees.
+         * @type Number
+         * @readonly
+         */
+        longitude: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * accuracy level of the latitude and longitude coordinates,
+         * specified in meters.
+         *
+         * This will always be a non-negative number.
+         *
+         * This corresponds to a 95% confidence level.
+         * @type Number
+         * @readonly
+         */
+        accuracy: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * height of the position, specified in meters above the ellipsoid
+         * [WGS84](http://dev.w3.org/geo/api/spec-source.html#ref-wgs).
+         * @type Number
+         * @readonly
+         */
+        altitude: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * accuracy level of the altitude coordinate, specified in meters.
+         *
+         * If altitude is not null then this will be a non-negative number.
+         * Otherwise this returns `null`.
+         *
+         * This corresponds to a 95% confidence level.
+         * @type Number
+         * @readonly
+         */
+        altitudeAccuracy: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * direction of travel of the hosting device,
+         * specified in non-negative degrees between 0 and 359,
+         * counting clockwise relative to the true north.
+         *
+         * If speed is 0 (device is stationary), then this returns `NaN`.
+         * @type Number
+         * @readonly
+         */
+        heading: null,
+
+        /**
+         * Read-only property representing the last retrieved
+         * current ground speed of the device, specified in meters per second.
+         *
+         * If this feature is unsupported by the device, this returns `null`.
+         *
+         * If the device is stationary, this returns 0,
+         * otherwise it returns a non-negative number.
+         * @type Number
+         * @readonly
+         */
+        speed: null,
+
+        /**
+         * Read-only property representing when the last retrieved
+         * positioning information was acquired by the device.
+         * @type Date
+         * @readonly
+         */
+        timestamp: null,
+
+        //PositionOptions interface
+        /**
+         * @cfg {Boolean} allowHighAccuracy
+         * When set to `true`, provide a hint that the application would like to receive
+         * the best possible results. This may result in slower response times or increased power consumption.
+         * The user might also deny this capability, or the device might not be able to provide more accurate
+         * results than if this option was set to `false`.
+         */
+        allowHighAccuracy: false,
+
+        /**
+         * @cfg {Number} timeout
+         * The maximum number of milliseconds allowed to elapse between a location update operation
+         * and the corresponding {@link #locationupdate} event being raised.  If a location was not successfully
+         * acquired before the given timeout elapses (and no other internal errors have occurred in this interval),
+         * then a {@link #locationerror} event will be raised indicating a timeout as the cause.
+         *
+         * Note that the time that is spent obtaining the user permission is **not** included in the period
+         * covered by the timeout.  The `timeout` attribute only applies to the location acquisition operation.
+         *
+         * In the case of calling `updateLocation`, the {@link #locationerror} event will be raised only once.
+         *
+         * If {@link #autoUpdate} is set to `true`, the {@link #locationerror} event could be raised repeatedly.
+         * The first timeout is relative to the moment {@link #autoUpdate} was set to `true`
+         * (or this {@link Ext.util.Geolocation} was initialized with the {@link #autoUpdate} config option set to `true`).
+         * Subsequent timeouts are relative to the moment when the device determines that it's position has changed.
+         */
+
+        timeout: Infinity,
+
+        /**
+         * @cfg {Number} maximumAge
+         * This option indicates that the application is willing to accept cached location information whose age
+         * is no greater than the specified time in milliseconds. If `maximumAge` is set to 0, an attempt to retrieve
+         * new location information is made immediately.
+         *
+         * Setting the `maximumAge` to Infinity returns a cached position regardless of its age.
+         *
+         * If the device does not have cached location information available whose age is no
+         * greater than the specified `maximumAge`, then it must acquire new location information.
+         *
+         * For example, if location information no older than 10 minutes is required, set this property to 600000.
+         */
+        maximumAge: 0,
+
+        // @private
+        provider : undefined
+    },
+
+    updateMaximumAge: function() {
+        if (this.watchOperation) {
+            this.updateWatchOperation();
+        }
+    },
+
+    updateTimeout: function() {
+        if (this.watchOperation) {
+            this.updateWatchOperation();
+        }
+    },
+
+    updateAllowHighAccuracy: function() {
+        if (this.watchOperation) {
+            this.updateWatchOperation();
+        }
+    },
+
+    applyProvider: function(config) {
+        if (Ext.feature.has.Geolocation) {
+            if (!config) {
+                if (navigator && navigator.geolocation) {
+                    config = navigator.geolocation;
+                }
+                else if (window.google) {
+                    config = google.gears.factory.create('beta.geolocation');
+                }
+            }
+        }
+        else {
+            this.fireEvent('locationerror', this, false, false, true, 'This device does not support Geolocation.');
+        }
+        return config;
+    },
+
+    updateAutoUpdate: function(newAutoUpdate, oldAutoUpdate) {
+        var me = this,
+            provider = me.getProvider();
+
+        if (oldAutoUpdate && provider) {
+            clearInterval(me.watchOperationId);
+            me.watchOperationId = null;
+        }
+
+        if (newAutoUpdate) {
+            if (!provider) {
+                me.fireEvent('locationerror', me, false, false, true, null);
+                return;
+            }
+
+            try {
+                me.updateWatchOperation();
+            }
+            catch(e) {
+                me.fireEvent('locationerror', me, false, false, true, e.message);
+            }
+        }
+    },
+
+    // @private
+    updateWatchOperation: function() {
+        var me = this,
+            provider = me.getProvider();
+
+        // The native watchPosition method is currently broken in iOS5...
+
+        if (me.watchOperationId) {
+            clearInterval(me.watchOperationId);
+        }
+
+        function pollPosition() {
+            provider.getCurrentPosition(
+                Ext.bind(me.fireUpdate, me),
+                Ext.bind(me.fireError, me),
+                me.parseOptions()
+            );
+        }
+
+        pollPosition();
+        me.watchOperationId = setInterval(pollPosition, this.getFrequency());
+    },
+
+    /**
+     * Executes a onetime location update operation,
+     * raising either a {@link #locationupdate} or {@link #locationerror} event.
+     *
+     * Does not interfere with or restart ongoing location monitoring.
+     * @param {Function} callback
+     * A callback method to be called when the location retrieval has been completed.
+     *
+     * Will be called on both success and failure.
+     *
+     * The method will be passed one parameter, {@link Ext.util.Geolocation} (**this** reference),
+     * set to `null` on failure.
+     *
+     *     geo.updateLocation(function (geo) {
+     *         alert('Latitude: ' + (geo !== null ? geo.latitude : 'failed'));
+     *     });
+     *
+     * @param {Object} scope (optional) The scope (**this** reference) in which the handler function is executed.
+     *
+     * **If omitted, defaults to the object which fired the event.**
+     * <!--positonOptions undocumented param, see W3C spec-->
+     */
+    updateLocation: function(callback, scope, positionOptions) {
+        var me = this,
+            provider = me.getProvider();
+
+        var failFunction = function(message, error) {
+            if (error) {
+                me.fireError(error);
+            }
+            else {
+                me.fireEvent('locationerror', me, false, false, true, message);
+            }
+            if (callback) {
+                callback.call(scope || me, null, me); //last parameter for legacy purposes
+            }
+        };
+
+        if (!provider) {
+            failFunction(null);
+            return;
+        }
+
+        try {
+            provider.getCurrentPosition(
+                //success callback
+                function(position) {
+                    me.fireUpdate(position);
+                    if (callback) {
+                        callback.call(scope || me, me, me); //last parameter for legacy purposes
+                    }
+                },
+                //error callback
+                function(error) {
+                    failFunction(null, error);
+                },
+                positionOptions || me.parseOptions()
+            );
+        }
+        catch(e) {
+            failFunction(e.message);
+        }
+    },
+
+    // @private
+    fireUpdate: function(position) {
+        var me = this,
+            coords = position.coords;
+
+        this.position = position;
+
+        me.setConfig({
+            timestamp: position.timestamp,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracy: coords.accuracy,
+            altitude: coords.altitude,
+            altitudeAccuracy: coords.altitudeAccuracy,
+            heading: coords.heading,
+            speed: coords.speed
+        });
+
+        me.fireEvent('locationupdate', me);
+    },
+
+    // @private
+    fireError: function(error) {
+        var errorCode = error.code;
+        this.fireEvent('locationerror', this,
+            errorCode == error.TIMEOUT,
+            errorCode == error.PERMISSION_DENIED,
+            errorCode == error.POSITION_UNAVAILABLE,
+            error.message == undefined ? null : error.message
+        );
+    },
+
+    // @private
+    parseOptions: function() {
+        var timeout = this.getTimeout(),
+            ret = {
+                maximumAge: this.getMaximumAge(),
+                enableHighAccuracy: this.getAllowHighAccuracy()
+            };
+
+        //Google doesn't like Infinity
+        if (timeout !== Infinity) {
+            ret.timeout = timeout;
+        }
+        return ret;
+    },
+
+    destroy : function() {
+        this.setAutoUpdate(false);
+    }
+});
+
+/**
+ * Wraps a Google Map in an Ext.Component using the [Google Maps API](http://code.google.com/apis/maps/documentation/v3/introduction.html).
+ *
+ * To use this component you must include an additional JavaScript file from Google:
+ *
+ *     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+ *
+ * ## Example
+ *
+ *     Ext.Viewport.add({
+ *         xtype: 'map',
+ *         useCurrentLocation: true
+ *     });
+ *
+ * @aside example maps
+ */
+Ext.define('Ext.Map', {
+    extend: 'Ext.Container',
+    xtype : 'map',
+    requires: ['Ext.util.Geolocation'],
+
+    isMap: true,
+
+    config: {
+        /**
+         * @event maprender
+         * Fired when Map initially rendered.
+         * @param {Ext.Map} this
+         * @param {google.maps.Map} map The rendered google.map.Map instance
+         */
+
+        /**
+         * @event centerchange
+         * Fired when map is panned around.
+         * @param {Ext.Map} this
+         * @param {google.maps.Map} map The rendered google.map.Map instance
+         * @param {google.maps.LatLng} center The current LatLng center of the map
+         */
+
+        /**
+         * @event typechange
+         * Fired when display type of the map changes.
+         * @param {Ext.Map} this
+         * @param {google.maps.Map} map The rendered google.map.Map instance
+         * @param {Number} mapType The current display type of the map
+         */
+
+        /**
+         * @event zoomchange
+         * Fired when map is zoomed.
+         * @param {Ext.Map} this
+         * @param {google.maps.Map} map The rendered google.map.Map instance
+         * @param {Number} zoomLevel The current zoom level of the map
+         */
+
+        /**
+         * @cfg {String} baseCls
+         * The base CSS class to apply to the Map's element
+         * @accessor
+         */
+        baseCls: Ext.baseCSSPrefix + 'map',
+
+        /**
+         * @cfg {Boolean/Ext.util.Geolocation} useCurrentLocation
+         * Pass in true to center the map based on the geolocation coordinates or pass a
+         * {@link Ext.util.Geolocation GeoLocation} config to have more control over your GeoLocation options
+         * @accessor
+         */
+        useCurrentLocation: false,
+
+        /**
+         * @cfg {google.maps.Map} map
+         * The wrapped map.
+         * @accessor
+         */
+        map: null,
+
+        /**
+         * @cfg {Ext.util.Geolocation} geo
+         * Geolocation provider for the map.
+         * @accessor
+         */
+        geo: null,
+
+        /**
+         * @cfg {Object} mapOptions
+         * MapOptions as specified by the Google Documentation:
+         * [http://code.google.com/apis/maps/documentation/v3/reference.html](http://code.google.com/apis/maps/documentation/v3/reference.html)
+         * @accessor
+         */
+        mapOptions: {}
+    },
+
+    constructor: function() {
+        this.callParent(arguments);
+        // this.element.setVisibilityMode(Ext.Element.OFFSETS);
+
+        if (!(window.google || {}).maps) {
+            this.setHtml('Google Maps API is required');
+        }
+    },
+
+    initialize: function() {
+        this.callParent();
+        this.on({
+            painted: 'doResize',
+            scope: this
+        });
+        this.innerElement.on('touchstart', 'onTouchStart', this);
+    },
+
+    getElementConfig: function() {
+        return {
+            reference: 'element',
+            className: 'x-container',
+            children: [{
+                reference: 'innerElement',
+                className: 'x-inner',
+                children: [{
+                    reference: 'mapContainer',
+                    className: Ext.baseCSSPrefix + 'map-container'
+                }]
+            }]
+        };
+    },
+
+    onTouchStart: function(e) {
+        e.makeUnpreventable();
+    },
+
+    applyMapOptions: function(options) {
+        return Ext.merge({}, this.options, options);
+    },
+
+    updateMapOptions: function(newOptions) {
+        var me = this,
+            gm = (window.google || {}).maps,
+            map = this.getMap();
+
+        if (gm && map) {
+            map.setOptions(newOptions);
+        }
+        if (newOptions.center && !me.isPainted()) {
+            me.un('painted', 'setMapCenter', this);
+            me.on('painted', 'setMapCenter', this, { delay: 150, single: true, args: [newOptions.center] });
+        }
+    },
+
+    getMapOptions: function() {
+        return Ext.merge({}, this.options || this.getInitialConfig('mapOptions'));
+    },
+
+    updateUseCurrentLocation: function(useCurrentLocation) {
+        this.setGeo(useCurrentLocation);
+        if (!useCurrentLocation) {
+            this.renderMap();
+        }
+    },
+
+    applyGeo: function(config) {
+        return Ext.factory(config, Ext.util.Geolocation, this.getGeo());
+    },
+
+    updateGeo: function(newGeo, oldGeo) {
+        var events = {
+            locationupdate : 'onGeoUpdate',
+            locationerror : 'onGeoError',
+            scope : this
+        };
+
+        if (oldGeo) {
+            oldGeo.un(events);
+        }
+
+        if (newGeo) {
+            newGeo.on(events);
+            newGeo.updateLocation();
+        }
+    },
+
+    doResize: function() {
+        var gm = (window.google || {}).maps,
+            map = this.getMap();
+
+        if (gm && map) {
+            gm.event.trigger(map, "resize");
+        }
+    },
+
+    // @private
+    renderMap: function() {
+        var me = this,
+            gm = (window.google || {}).maps,
+            element = me.mapContainer,
+            mapOptions = me.getMapOptions(),
+            map = me.getMap(),
+            event;
+
+        if (gm) {
+            if (Ext.os.is.iPad) {
+                Ext.merge({
+                    navigationControlOptions: {
+                        style: gm.NavigationControlStyle.ZOOM_PAN
+                    }
+                }, mapOptions);
+            }
+
+            mapOptions = Ext.merge({
+                zoom: 12,
+                mapTypeId: gm.MapTypeId.ROADMAP
+            }, mapOptions);
+
+            // This is done separately from the above merge so we don't have to instantiate
+            // a new LatLng if we don't need to
+            if (!mapOptions.hasOwnProperty('center')) {
+                mapOptions.center = new gm.LatLng(37.381592, -122.135672); // Palo Alto
+            }
+
+            if (element.dom.firstChild) {
+                Ext.fly(element.dom.firstChild).destroy();
+            }
+
+            if (map) {
+                gm.event.clearInstanceListeners(map);
+            }
+
+            me.setMap(new gm.Map(element.dom, mapOptions));
+            map = me.getMap();
+
+            //Track zoomLevel and mapType changes
+            event = gm.event;
+            event.addListener(map, 'zoom_changed', Ext.bind(me.onZoomChange, me));
+            event.addListener(map, 'maptypeid_changed', Ext.bind(me.onTypeChange, me));
+            event.addListener(map, 'center_changed', Ext.bind(me.onCenterChange, me));
+
+            me.fireEvent('maprender', me, map);
+        }
+    },
+
+    // @private
+    onGeoUpdate: function(geo) {
+        if (geo) {
+            this.setMapCenter(new google.maps.LatLng(geo.getLatitude(), geo.getLongitude()));
+        }
+    },
+
+    // @private
+    onGeoError: Ext.emptyFn,
+
+    /**
+     * Moves the map center to the designated coordinates hash of the form:
+     *
+     *     { latitude: 37.381592, longitude: -122.135672 }
+     *
+     * or a google.maps.LatLng object representing to the target location.
+     *
+     * @param {Object/google.maps.LatLng} coordinates Object representing the desired Latitude and
+     * longitude upon which to center the map.
+     */
+    setMapCenter: function(coordinates) {
+        var me = this,
+            map = me.getMap(),
+            gm = (window.google || {}).maps;
+
+        if (gm) {
+            if (!me.isPainted()) {
+                me.un('painted', 'setMapCenter', this);
+                me.on('painted', 'setMapCenter', this, { delay: 150, single: true, args: [coordinates] });
+                return;
+            }
+            coordinates = coordinates || new gm.LatLng(37.381592, -122.135672);
+
+            if (coordinates && !(coordinates instanceof gm.LatLng) && 'longitude' in coordinates) {
+                coordinates = new gm.LatLng(coordinates.latitude, coordinates.longitude);
+            }
+
+            if (!map) {
+                me.renderMap();
+                map = me.getMap();
+            }
+
+            if (map && coordinates instanceof gm.LatLng) {
+                map.panTo(coordinates);
+            }
+            else {
+                this.options = Ext.apply(this.getMapOptions(), {
+                    center: coordinates
+                });
+            }
+        }
+    },
+
+    // @private
+    onZoomChange : function() {
+        var mapOptions = this.getMapOptions(),
+            map = this.getMap(),
+            zoom;
+
+        zoom = (map && map.getZoom) ? map.getZoom() : mapOptions.zoom || 10;
+
+        this.options = Ext.apply(mapOptions, {
+            zoom: zoom
+        });
+
+        this.fireEvent('zoomchange', this, map, zoom);
+    },
+
+    // @private
+    onTypeChange : function() {
+        var mapOptions = this.getMapOptions(),
+            map = this.getMap(),
+            mapTypeId;
+
+        mapTypeId = (map && map.getMapTypeId) ? map.getMapTypeId() : mapOptions.mapTypeId;
+
+        this.options = Ext.apply(mapOptions, {
+            mapTypeId: mapTypeId
+        });
+
+        this.fireEvent('typechange', this, map, mapTypeId);
+    },
+
+    // @private
+    onCenterChange: function() {
+        var mapOptions = this.getMapOptions(),
+            map = this.getMap(),
+            center;
+
+        center = (map && map.getCenter) ? map.getCenter() : mapOptions.center;
+
+        this.options = Ext.apply(mapOptions, {
+            center: center
+        });
+
+        this.fireEvent('centerchange', this, map, center);
+
+    },
+
+    // @private
+    destroy: function() {
+        Ext.destroy(this.getGeo());
+        var map = this.getMap();
+
+        if (map && (window.google || {}).maps) {
+            google.maps.event.clearInstanceListeners(map);
+        }
+
+        this.callParent();
+    }
+}, function() {
+});
+
+/**
  * {@link Ext.Title} is used for the {@link Ext.Toolbar#title} configuration in the {@link Ext.Toolbar} component.
  * @private
  */
@@ -60401,6 +61168,44 @@ Ext.define('GeoReport.controller.ReportController', {
     
 });
 
+Ext.define('GeoReport.view.MapView', {
+    extend : 'Ext.Panel',
+    xtype : 'mapview',
+    title : 'map',
+   
+    config : {
+
+        fullscreen : false,
+        styleHtmlContent : true,
+        layout : {
+            type : 'fit'
+        },
+        items : [{
+            xtype : 'panel',
+            items : [{
+                xtype : 'textfield',
+                label : 'Address',
+                name : 'search'
+            }]
+        }, {
+            xtype : 'map',
+            useCurrentLocation : true,
+            mapOptions : {
+                zoom : 12,
+                navigationControl : true,
+                navigationControlOptions : {
+                    style : google.maps.NavigationControlStyle.DEFAULT
+                }
+            }
+        }]
+    },
+    
+    initialize : function(){
+        console.log('init mapview');
+        
+    }
+});
+
 Ext.Loader.setConfig({
 	enabled : true,
 	disableCaching : false
@@ -60409,91 +61214,75 @@ Ext.Loader.setConfig({
 Ext.define('GeoReport.view.Main', {
 	extend : 'Ext.tab.Panel',
 	xtype : 'main',
-	requires : [ 'Ext.TitleBar', 'Ext.Img' ],
-	searchPos : 0,
+	requires : [ 'Ext.TitleBar', 'GeoReport.view.MapView', 'Ext.Img' ],
 	config : {
 		tabBarPosition : 'bottom',
 
-		items : [ 
-//		          {
-//			title : 'Welcome',
-//			iconCls : 'home',
-//			layout : 'fit',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			items : [ {
-//				xtype : 'image',
-//				mode : 'image',
-//				src : 'resources/images/loginv1.jpg',
-//				width : '100%',
-//				height : '100%'
-//			} ]
-//		}, 
-		{
-			title : 'mii',
-			iconCls : 'action',
-			styleHtmlContent : true,
+		items : [ {
+			title : 'Welcome',
+			iconCls : 'home',
 			layout : 'fit',
+			styleHtmlContent : true,
 			scrollable : true,
 			items : [ {
 				xtype : 'image',
 				mode : 'image',
-				src : 'resources/images/Screen-1.png',
+				src : 'resources/images/loginv3.png',
 				width : '100%',
-				height : '100%',
-				listeners : {
-					tap: function(cmp) {
-						console.log('login image tap');
-						if(!this.searchPos || this.searchPos == 0) {
-							this.setSrc('resources/images/Screen-2.png');
-							this.searchPos = 1;
-						} else {
-							this.setSrc('resources/images/Screen-1.png');
-							this.searchPos = 0;
-						}
-					}
-				},
+				height : '100%'
+					
 			} ]
 
-		}
-//		, {
-//			title : 'Map',
-//			iconCls : 'maps',
-//			fullscreen : false,
-//			layout : 'auto',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			html : '<h1>Map</h1>'
-//		}, {
-//			title : 'Notifications',
-//			iconCls: 'organize',
-//			fullscreen : false,
-//			layout : 'auto',
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			html : '<h1>Notifications</h1>',
-//		}
-//		, {
-//			title : 'Logout',
-//			iconCls : 'disclosure',
-//
-//			styleHtmlContent : true,
-//			scrollable : true,
-//			listeners : {
-//				activate : function() {
-//					console.log('Logout tab active');
-//					GeoReport.app.fireEvent('logout');
-//				}
-//			},
-//			items : [ {
-//				docked : 'top',
-//				xtype : 'titlebar',
-//				title : 'Logout'
-//			}
-//			]
-//
-//		} 
-		]
+		}, {
+			title : 'Reports',
+			iconCls : 'action',
+			styleHtmlContent : true,
+			scrollable : true,
+
+			html : '<h1>Reports</h1>',
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Reports'
+			} ]
+
+		}, {
+			title : 'Map',
+			iconCls : 'maps',
+			fullscreen : false,
+			layout : 'auto',
+			styleHtmlContent : true,
+			scrollable : true,
+			layout : {
+				type : 'card'
+			},
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Map'
+			}, {
+				xtype : 'mapview'
+			} ]
+
+		}, {
+			title : 'Logout',
+			iconCls : 'disclosure',
+
+			styleHtmlContent : true,
+			scrollable : true,
+			listeners : {
+				activate : function() {
+					console.log('Logout tab active');
+					GeoReport.app.fireEvent('logout');
+				}
+			},
+			items : [ {
+				docked : 'top',
+				xtype : 'titlebar',
+				title : 'Logout'
+			} ]
+
+		} ]
 	}
 });
 
