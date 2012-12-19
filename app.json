@@ -36,6 +36,8 @@
      */
     "js": [
         {
+        "path": "cordova-1.8.0rc1.js"
+        },{
             "path": "touch/sencha-touch.js"
         },
         {
