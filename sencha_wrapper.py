@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil, errno
 
 def contains_errors(s):
     return '[ERROR]' in s
@@ -11,6 +12,14 @@ def get_errors(s):
         if contains_errors(line):
             ret += line + '\n'
     return ret
+
+def copyanything(src, dst):
+    try:
+        shutil.copytree(src, dst)
+    except OSError as exc: # python >2.5
+        if exc.errno == errno.ENOTDIR:
+            shutil.copy(src, dst)
+        else: raise
 
 print('Running Sencha command...')
 try:
@@ -53,5 +62,11 @@ with open(os.path.join('android', 'AndroidManifest.xml'), 'r+t') as f:
     f.seek(0)
     f.write(content)
     f.truncate()
-
+    
+    wwwDest = './android/assets/www'
+    wwwSource = './build/GeoReport/testing'
+    shutil.rmtree(wwwDest)
+    #os.makedirs(wwwDest)
+    copyanything(wwwSource,wwwDest)
+    sys.stdout.write('Build success')
 exit(return_code)

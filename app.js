@@ -39,7 +39,7 @@ Ext.application({
         Ext.fly('appLoadingIndicator').destroy();
 
         // Initialize the main view
-        Ext.Viewport.add(Ext.create('GeoReport.view.Main'));
+        Ext.Viewport.add(Ext.create('GeoReport.view.LoginForm'));
     },
 
     onUpdated: function() {
